@@ -1,7 +1,7 @@
 ---
 name: "[Feat] 작업목록"
 about: Suggest an idea for this project
-title: ''
+title: "[Feat]"
 labels: ''
 assignees: ''
 
