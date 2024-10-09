@@ -1,5 +1,26 @@
 {
   "dependencies": {
+    "com.unity.barracuda": {
+      "version": "2.0.0",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.burst": "1.6.0",
+        "com.unity.modules.jsonserialize": "1.0.0",
+        "com.unity.modules.imageconversion": "1.0.0"
+      },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.burst": {
+      "version": "1.8.17",
+      "depth": 2,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.mathematics": "1.2.1",
+        "com.unity.modules.jsonserialize": "1.0.0"
+      },
+      "url": "https://packages.unity.com"
+    },
     "com.unity.collab-proxy": {
       "version": "2.4.4",
       "depth": 0,
@@ -56,6 +77,13 @@
     "com.unity.ide.vscode": {
       "version": "1.2.5",
       "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.mathematics": {
+      "version": "1.2.6",
+      "depth": 3,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
@@ -205,6 +233,34 @@
         "com.unity.xr.legacyinputhelpers": "2.1.7"
       },
       "url": "https://packages.unity.com"
+    },
+    "jp.ikep.mediapipe.blazepose": {
+      "version": "https://github.com/creativeIKEP/BlazePoseBarracuda.git?path=Packages/BlazePoseBarracuda#v1.3.0",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "jp.ikep.mediapipe.posedetection": "1.0.1",
+        "jp.ikep.mediapipe.poselandmark": "1.1.1"
+      },
+      "hash": "809c62bd49f7783f84a36e75a992c5226908cb19"
+    },
+    "jp.ikep.mediapipe.posedetection": {
+      "version": "https://github.com/creativeIKEP/PoseDetectionBarracuda.git?path=Packages/PoseDetectionBarracuda#v1.0.1",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.barracuda": "2.0.0-pre.3"
+      },
+      "hash": "21c7f9864253dafd02763053910f0b74d89775b0"
+    },
+    "jp.ikep.mediapipe.poselandmark": {
+      "version": "https://github.com/creativeIKEP/PoseLandmarkBarracuda.git?path=Packages/PoseLandmarkBarracuda#v1.1.1",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.barracuda": "2.0.0-pre.3"
+      },
+      "hash": "6a3659339ef1e9052f759738acf57830e0141282"
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",
