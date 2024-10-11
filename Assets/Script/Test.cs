@@ -37,7 +37,8 @@ public class Test : MonoBehaviour
 
     [SerializeField] RawImage inputImageUI;  // 화면상에 보이는 캠용 
 
-
+    [SerializeField] bool OnFps;
+    private float deltaTime = 0f;
     // 트래커용 
     [SerializeField] bool Ontracker;
     [SerializeField] Camera mainCamera;
@@ -66,6 +67,7 @@ public class Test : MonoBehaviour
     private void Start()
     {
         Ontracker = false;
+        OnFps = false;
         detecter = new BlazePoseDetecter();
         worldpreviousLandmarks = new Vector3[33];
 
@@ -75,8 +77,9 @@ public class Test : MonoBehaviour
     {
         detecter.ProcessImage(WebCamInput.inputImageTexture);
         inputImageUI.texture = WebCamInput.inputImageTexture;
-        
-        
+
+        deltaTime += (Time.unscaledDeltaTime - deltaTime) * 0.1f; // 프레임 카운터용
+
         // 랜드마크의 프레임당 움직임의 차이를 받아서 매핑한 관절의 움직임으로 변환해야함 
         // 프레임당 움직임 , 랜드마크는 0 ~ 32 까지 33개  
         //https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker?hl=ko
@@ -84,7 +87,7 @@ public class Test : MonoBehaviour
 
         //1. 웹캠 출력값저장 
         //2. 얻은 출력값으로 3d 모델 움직임
-        
+
 
 
         for (int i = 0; i < detecter.vertexCount; i++)  //detecter.vertexCount = 33
@@ -132,6 +135,37 @@ public class Test : MonoBehaviour
     {
         detecter.Dispose();
     }
+    public void OnoffFps()  // ui 버튼으로 트래커 온오프 
+    {
+        if (OnFps == true)
+        {
+            OnFps = false;
+        }
+        else if (OnFps == false)
+        {
+            OnFps = true;
+        }
+    }
+
+    private void OnGUI()
+    {
+        if (OnFps == true)
+        {
+            GUIStyle style = new GUIStyle();
+
+            Rect rect = new Rect(30, 30, Screen.width, Screen.height);
+            style.alignment = TextAnchor.UpperLeft;
+            style.fontSize = 25;
+            style.normal.textColor = Color.green;
+
+            float ms = deltaTime * 1000f;
+            float fps = 1.0f / deltaTime;
+            string text = string.Format("{0:0.} FPS ({1:0.0} ms)", fps, ms);
+
+            GUI.Label(rect, text, style);
+        }
+    }
+
 
     public void OnoffTracker()  // ui 버튼으로 트래커 온오프 
     {
@@ -144,6 +178,7 @@ public class Test : MonoBehaviour
             Ontracker = true;   
         }
     }
+
     void OnRenderObject()  // 트래킹 on . off 옵션으로만 보이게 
     {
         if (Ontracker == true)
