@@ -35,8 +35,11 @@ public class Test : MonoBehaviour
 
 
 
-    [SerializeField] RawImage inputImageUI;
+    [SerializeField] RawImage inputImageUI;  // 화면상에 보이는 캠용 
 
+
+    // 트래커용 
+    [SerializeField] bool Ontracker;
     [SerializeField] Camera mainCamera;
     Material material;
     [SerializeField] Shader shader;
@@ -62,30 +65,29 @@ public class Test : MonoBehaviour
     private BlazePoseDetecter detecter;
     private void Start()
     {
+        Ontracker = false;
         detecter = new BlazePoseDetecter();
         worldpreviousLandmarks = new Vector3[33];
 
         material = new Material(shader);
     }
-    private void Update()
+    private void Update()  // 일단은 트래킹 정보를 업데이트에서 불러오지만 성능에 영향을 많이 끼침 고려할 문제
     {
         detecter.ProcessImage(WebCamInput.inputImageTexture);
         inputImageUI.texture = WebCamInput.inputImageTexture;
-        // Vector3 hipCenter = (detecter.GetPoseWorldLandmark(23) + detecter.GetPoseWorldLandmark(24)) / 2.0f;
-        // 좌표변환용 기준점 
+        
+        
         // 랜드마크의 프레임당 움직임의 차이를 받아서 매핑한 관절의 움직임으로 변환해야함 
         // 프레임당 움직임 , 랜드마크는 0 ~ 32 까지 33개  
         //https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker?hl=ko
         // 사용 할 랜드마크는  0(머리) , 11 13 15(왼팔) , 12 14 16(오른팔) , 23 25 27(왼다리) , 24 26 28(오른다리)
-        // ex 어깨가 움직이려면 손목의 좌표변화 만큼 회전해야함 팔
-        // 현재 랜드마크 와 이전 랜드마크 필요함
 
-        //1. 웹캠 출력 획득 이전값 , 현재값저장(차이) 
-        //2. 얻은 출력값을 3d 모델에 맞게 변경 
-        //3. 변경된 차이 값으로 모델을 움직임 
+        //1. 웹캠 출력값저장 
+        //2. 얻은 출력값으로 3d 모델 움직임
+        
 
 
-        for (int i = 0; i < detecter.vertexCount; i++)
+        for (int i = 0; i < detecter.vertexCount; i++)  //detecter.vertexCount = 33
         {
             worldpreviousLandmarks[i] = detecter.GetPoseWorldLandmark(i);  // 월드기준 보정된 좌표임 
         }
@@ -97,11 +99,11 @@ public class Test : MonoBehaviour
     {
         // 오른손이 특정 목표 위치로 이동
         animator.SetIKPosition(AvatarIKGoal.RightHand, worldpreviousLandmarks[16]);
-        animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 1.0f); // 가중치 100% 적용
+        animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 1.0f); 
         // 오른손 회전 설정
         Quaternion rightHandRotation = Quaternion.LookRotation(worldpreviousLandmarks[16]);
         animator.SetIKRotation(AvatarIKGoal.RightHand, rightHandRotation);
-        animator.SetIKRotationWeight(AvatarIKGoal.RightHand, 1.0f); // 회전 가중치 설정
+        animator.SetIKRotationWeight(AvatarIKGoal.RightHand, 1.0f); 
 
         
         // 왼손
@@ -131,22 +133,34 @@ public class Test : MonoBehaviour
         detecter.Dispose();
     }
 
+    public void OnoffTracker()  // ui 버튼으로 트래커 온오프 
+    {
+        if (Ontracker == true)
+        {
+            Ontracker = false;
+        }
+        else if (Ontracker == false) 
+        {
+            Ontracker = true;   
+        }
+    }
     void OnRenderObject()  // 트래킹 on . off 옵션으로만 보이게 
     {
-        // Use predicted pose world landmark results on the ComputeBuffer (GPU) memory.
-        material.SetBuffer("_worldVertices", detecter.worldLandmarkBuffer);
-        // Set pose landmark counts.
-        material.SetInt("_keypointCount", detecter.vertexCount);
-        material.SetFloat("_humanExistThreshold", humanExistThreshold);
-        material.SetVectorArray("_linePair", linePair);
-        material.SetMatrix("_invViewMatrix", mainCamera.worldToCameraMatrix.inverse);
+        if (Ontracker == true)
+        {
+            material.SetBuffer("_worldVertices", detecter.worldLandmarkBuffer);
 
-        // Draw 35 world body topology lines.
-        material.SetPass(2);
-        Graphics.DrawProceduralNow(MeshTopology.Triangles, 6, 35);
-        //
-        // Draw 33 world landmark points.
-        material.SetPass(3);
-        Graphics.DrawProceduralNow(MeshTopology.Triangles, 6, detecter.vertexCount);
+            material.SetInt("_keypointCount", detecter.vertexCount);
+            material.SetFloat("_humanExistThreshold", humanExistThreshold);
+            material.SetVectorArray("_linePair", linePair);
+            material.SetMatrix("_invViewMatrix", mainCamera.worldToCameraMatrix.inverse);
+
+
+            material.SetPass(2);
+            Graphics.DrawProceduralNow(MeshTopology.Triangles, 6, 35);
+
+            material.SetPass(3);
+            Graphics.DrawProceduralNow(MeshTopology.Triangles, 6, detecter.vertexCount);
+        }
     }
 }
