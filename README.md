@@ -53,7 +53,10 @@ https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker?hl=ko
 
 
 사용할 에셋 및 참고 깃헙
+
 https://github.com/homuler/MediaPipeUnityPlugin
+
 https://github.com/creativeIKEP/BlazePoseBarracuda
+
 https://assetstore.unity.com/packages/3d/characters/unity-chan-model-18705
 
