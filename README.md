@@ -22,11 +22,15 @@ https://github.com/creativeIKEP/BlazePoseBarracuda
 
 
 목표 기능 
+
 1.실시간으로 촬영된 사람과 동일한 포즈 구현
+
 예상 기간 24.10.08 ~ 24.10.14
+
 https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker?hl=ko
+
 구글의 mediapipe에서 제공한  위 이미지에서 알 수 있듯이  목 , 허리 , 가슴 , 골반 등의 척추라인의 랜드마크가 없음 
-따라서 가상의 점을 만들어서 트래킹 해야 함 .
+따라서 가상의 점을 만들어서 트래킹 해야 함.
 제공하는 패키지의 기능에서 촬영된 이미지의 포즈를 예측해서
  3d 월드상의 좌표로(각각의 랜드마크로 변환) 제공해주기 때문에 
 이를 이용해서 3d 아바타를 움직여볼 계획
