@@ -31,9 +31,13 @@ public class Test : MonoBehaviour
     [SerializeField] Transform Leftleg;
     [SerializeField] Transform Leftfoot;
 
-    [SerializeField] WebCamInput WebCamInput;
+    [SerializeField] Vector3 testneck;
 
+    [SerializeField] mobileCam  MobileCam;
+    [SerializeField] WebCamInput webCamInput;
 
+   
+    [SerializeField] float ikWeight;
 
     [SerializeField] RawImage inputImageUI;  // 화면상에 보이는 캠용 
 
@@ -64,58 +68,100 @@ public class Test : MonoBehaviour
 
     private const float positionThreshold = 0.001f;
     private BlazePoseDetecter detecter;
+
+
+    Quaternion headRotation;
+
+
     private void Start()
     {
+        Head = animator.GetBoneTransform(HumanBodyBones.Chest);
+        testneck = new Vector3 (0, 0, 0);
         Ontracker = false;
         OnFps = false;
         detecter = new BlazePoseDetecter();
         worldpreviousLandmarks = new Vector3[33];
 
         material = new Material(shader);
+        ikWeight = 1.0f;
+
+
     }
     private void Update()  // 일단은 트래킹 정보를 업데이트에서 불러오지만 성능에 영향을 많이 끼침 고려할 문제
     {
-        detecter.ProcessImage(WebCamInput.inputImageTexture);
-        inputImageUI.texture = WebCamInput.inputImageTexture;
+       
+        
+        detecter.ProcessImage(webCamInput.inputImageTexture);
+       
+        inputImageUI.texture = webCamInput.inputImageTexture;
 
         deltaTime += (Time.unscaledDeltaTime - deltaTime) * 0.1f; // 프레임 카운터용
 
+
+        
         // 랜드마크의 프레임당 움직임의 차이를 받아서 매핑한 관절의 움직임으로 변환해야함 
         // 프레임당 움직임 , 랜드마크는 0 ~ 32 까지 33개  
         //https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker?hl=ko
-        // 사용 할 랜드마크는  0(머리) , 11 13 15(왼팔) , 12 14 16(오른팔) , 23 25 27(왼다리) , 24 26 28(오른다리)
-
+        // 사용 할 랜드마크는  0(머리) , 11 13 15 17 19 (왼팔) , 12 14 16 18 20(오른팔) , 23 25 27(왼다리) , 24 26 28(오른다리)
+        // 17 19 왼손
+        // 18 20 오른손   양손은 핸드 트래커가 추가로 필요 할 듯  포즈 트래커로는 안됨 
+        // 더 자연스러운 움직임을 구현하려면 목 , 척추가 필요함
+        // 목과 척추 좌표는 blazepose에서 제공하지 않기 때문에 따로 만들어야 할듯 
+        // 목은 양 어깨의 중간 척추는 양 고관절 중간값 (좌표 + 좌표) / 2.0f 하고 y값만 조금 올리면 될듯
+        // 가상의 지점을 만들어서 애니메이션 지정하면 될거같음 
         //1. 웹캠 출력값저장 
         //2. 얻은 출력값으로 3d 모델 움직임
 
 
 
         for (int i = 0; i < detecter.vertexCount; i++)  //detecter.vertexCount = 33
-        {
-            worldpreviousLandmarks[i] = detecter.GetPoseWorldLandmark(i);  // 월드기준 보정된 좌표임 
+        {   
+            worldpreviousLandmarks[i] =  detecter.GetPoseWorldLandmark(i);  // 월드기준 보정된 좌표임
+                                                                         
         }
 
+
+        Debug.Log(humanExistThreshold);
 
     }
 
     void OnAnimatorIK(int layerIndex)
     {
-        // 오른손이 특정 목표 위치로 이동
+       
+       
+        // 오른손
         animator.SetIKPosition(AvatarIKGoal.RightHand, worldpreviousLandmarks[16]);
-        animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 1.0f); 
-        // 오른손 회전 설정
-        Quaternion rightHandRotation = Quaternion.LookRotation(worldpreviousLandmarks[16]);
+        animator.SetIKPositionWeight(AvatarIKGoal.RightHand, ikWeight); 
+        
+        Quaternion rightHandRotation = Quaternion.LookRotation(worldpreviousLandmarks[20]);
         animator.SetIKRotation(AvatarIKGoal.RightHand, rightHandRotation);
-        animator.SetIKRotationWeight(AvatarIKGoal.RightHand, 1.0f); 
+        animator.SetIKRotationWeight(AvatarIKGoal.RightHand, ikWeight); 
 
         
         // 왼손
         animator.SetIKPosition(AvatarIKGoal.LeftHand, worldpreviousLandmarks[15]);
-        animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1.0f); 
+        animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, ikWeight); 
 
-        Quaternion lefttHandRotation = Quaternion.LookRotation(worldpreviousLandmarks[15]);
         animator.SetIKRotation(AvatarIKGoal.LeftHand, rightHandRotation);
-        animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1.0f); 
+        Quaternion lefttHandRotation = Quaternion.LookRotation(worldpreviousLandmarks[19]);
+        animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, ikWeight);
+
+
+        // 오른 다리 
+        //animator.SetIKPosition(AvatarIKGoal.RightFoot, worldpreviousLandmarks[28]);
+        //animator.SetIKPositionWeight(AvatarIKGoal.RightFoot, 0.3f);
+
+        //Quaternion RightFootRotation = Quaternion.LookRotation(worldpreviousLandmarks[28] - worldpreviousLandmarks[26]);
+        //animator.SetIKRotation(AvatarIKGoal.RightFoot, RightFootRotation);
+        //animator.SetIKRotationWeight(AvatarIKGoal.RightFoot, 1.0f);
+
+        //// 왼 다리
+        //animator.SetIKPosition(AvatarIKGoal.LeftFoot, worldpreviousLandmarks[27]);
+        //animator.SetIKPositionWeight(AvatarIKGoal.LeftFoot, 0.3f);
+
+        //Quaternion LeftFootRotation = Quaternion.LookRotation(worldpreviousLandmarks[27] - worldpreviousLandmarks[25]);
+        //animator.SetIKRotation(AvatarIKGoal.LeftFoot, LeftFootRotation);
+        //animator.SetIKRotationWeight(AvatarIKGoal.LeftFoot, 1.0f);
 
 
 
@@ -123,11 +169,31 @@ public class Test : MonoBehaviour
     }
     private void OnAnimatorMove()
     {
-        animator.GetBoneTransform(HumanBodyBones.RightLowerArm).transform.position = worldpreviousLandmarks[14];
-        animator.GetBoneTransform(HumanBodyBones.RightUpperArm).transform.position = worldpreviousLandmarks[16];
 
-        animator.GetBoneTransform(HumanBodyBones.LeftLowerArm).transform.position = worldpreviousLandmarks[13];
+      //  animator.GetBoneTransform(HumanBodyBones.Chest).transform.rotation = Quaternion.LookRotation(testneck);
+
+        animator.GetBoneTransform(HumanBodyBones.RightLowerArm).transform.position = worldpreviousLandmarks[14];  // 오른팔
+        animator.GetBoneTransform(HumanBodyBones.RightUpperArm).position = worldpreviousLandmarks[16];
+
+        animator.GetBoneTransform(HumanBodyBones.LeftLowerArm).transform.position = worldpreviousLandmarks[13];  // 왼팔 
         animator.GetBoneTransform(HumanBodyBones.LeftUpperArm).transform.position = worldpreviousLandmarks[15];
+
+        //animator.GetBoneTransform (HumanBodyBones.Spine).transform.rotation = Quaternion.LookRotation(worldpreviousLandmarks[0]);
+        
+        //animator.GetBoneTransform(HumanBodyBones.RightFoot).transform.position = worldpreviousLandmarks[28];
+        //animator.GetBoneTransform(HumanBodyBones.RightLowerLeg).transform.position = worldpreviousLandmarks[24];  // 오른다리
+        //animator.GetBoneTransform(HumanBodyBones.RightUpperLeg).transform.position = worldpreviousLandmarks[26];
+
+        //animator.GetBoneTransform(HumanBodyBones.LeftFoot).transform.position = worldpreviousLandmarks[27];
+        //animator.GetBoneTransform(HumanBodyBones.LeftLowerLeg).transform.position = worldpreviousLandmarks[23];  // 왼다리
+        //animator.GetBoneTransform(HumanBodyBones.LeftUpperLeg).transform.position = worldpreviousLandmarks[25];
+
+        //Vector3 neckPosition = (worldpreviousLandmarks[11] + worldpreviousLandmarks[12]) / 2;
+        //animator.GetBoneTransform(HumanBodyBones.Neck).position = neckPosition;
+        //animator.GetBoneTransform(HumanBodyBones.Neck).rotation = Quaternion.LookRotation(worldpreviousLandmarks[0] - neckPosition);
+
+
+
     }
 
 
@@ -135,7 +201,9 @@ public class Test : MonoBehaviour
     {
         detecter.Dispose();
     }
-    public void OnoffFps()  // ui 버튼으로 트래커 온오프 
+
+
+    public void OnoffFps()  // ui 버튼으로 fps 온오프 
     {
         if (OnFps == true)
         {
@@ -147,7 +215,7 @@ public class Test : MonoBehaviour
         }
     }
 
-    private void OnGUI()
+    private void OnGUI()  // fps 카운터 
     {
         if (OnFps == true)
         {
@@ -165,7 +233,17 @@ public class Test : MonoBehaviour
             GUI.Label(rect, text, style);
         }
     }
-
+    public void OffCam() 
+    {
+        if (inputImageUI.gameObject.activeSelf == true)
+        {
+            inputImageUI.gameObject.SetActive(false);
+        }
+        else 
+        {
+            inputImageUI.gameObject.SetActive(true);
+        }
+    }
 
     public void OnoffTracker()  // ui 버튼으로 트래커 온오프 
     {
@@ -180,9 +258,11 @@ public class Test : MonoBehaviour
     }
 
     void OnRenderObject()  // 트래킹 on . off 옵션으로만 보이게 
-    {
+    {   
+
+
         if (Ontracker == true)
-        {
+        {   
             material.SetBuffer("_worldVertices", detecter.worldLandmarkBuffer);
 
             material.SetInt("_keypointCount", detecter.vertexCount);
